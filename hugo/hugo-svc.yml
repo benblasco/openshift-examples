@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hugo-service
+  labels:
+    app: hugo
+spec:
+  selector:
+    app: hugo
+  ports:
+  - name: hugo-webui
+    port: 1313
+    targetPort: 1313

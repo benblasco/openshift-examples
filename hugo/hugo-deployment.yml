@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hugo
+  annotations:
+  labels:
+    app.kubernetes.io/component: hugo
+    app.kubernetes.io/instance: hugo
+    app.kubernetes.io/part-of: hugo
+    app.openshift.io/runtime: openshift
+    app: hugo
+spec:
+  progressDeadlineSeconds: 30
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hugo
+  template:
+    metadata:
+      labels:
+        app: hugo
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - image: docker.io/klakegg/hugo:0.99.1-asciidoctor
+        command: ['hugo', 'server', '--baseURL=hugo-service-hugo.apps-crc.testing', '--appendPort=false']
+        name: hugo
+        ports:
+        - containerPort: 1313
+          protocol: TCP
+        resources: {}
+        securityContext:
+          #privileged: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          capabilities:
+            drop: [ "ALL" ]
+            #- CAP_NET_RAW
+            #- CAP_AUDIT_WRITE
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - mountPath: /src
+          name: hugo-src-pvc
+      enableServiceLinks: false
+      restartPolicy: Always
+      volumes:
+      - name: hugo-src-pvc
+        persistentVolumeClaim:
+          claimName: hugo-src
+
+      initContainers:
+      - name: init-hugo-src
+        image: registry.access.redhat.com/ubi9/toolbox:latest
+        #command: ['sh', '-c', 'git clone https://github.com/RedHatGov/redhatgov.github.io.git /src']
+        command: ['sh', '-c', 'if cd /src; then git pull; else git clone https://github.com/RedHatGov/redhatgov.github.io.git /src; fi']
+        volumeMounts:
+        - mountPath: /src
+          name: hugo-src-pvc
+      volumes:
+      - name: hugo-src-pvc
+        persistentVolumeClaim:
+          claimName: hugo-src
