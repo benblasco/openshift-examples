@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hugo-configmap
+  namespace: hugo
+immutable: false
+data:
+  git-repo-url: 'https://github.com/RedHatGov/redhatgov.github.io.git'

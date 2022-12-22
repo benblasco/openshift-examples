@@ -58,7 +58,14 @@ spec:
         #command: ['sh', '-c', 'if [ ! -d "/src" ]; then git clone https://github.com/RedHatGov/redhatgov.github.io.git /src; else cd /src && git pull; fi']
         #command: ['sh', '-c',  '{ cd /src; git pull; } || git clone https://github.com/RedHatGov/redhatgov.github.io.git /src' ]
 
-        command: ['sh', '-c',  'git clone https://github.com/RedHatGov/redhatgov.github.io.git /src || { cd /src; git pull; }'  ]
+        #command: ['sh', '-c',  'git clone https://github.com/RedHatGov/redhatgov.github.io.git /src || { cd /src; git pull; }'  ]
+        command: ['sh', '-c',  'git clone $(GIT_REPO_URL) /src || { cd /src; git pull; }'  ]
+        env:
+          - name: GIT_REPO_URL
+            valueFrom:
+              configMapKeyRef:
+                name: hugo-configmap
+                key: git-repo-url
         volumeMounts:
         - mountPath: /src
           name: hugo-src-pvc
