@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-blueocean
+  annotations:
+  labels:
+    app.kubernetes.io/component: jenkins-blueocean
+    app.kubernetes.io/instance: jenkins-blueocean
+    app.kubernetes.io/part-of: jenkins-blueocean
+    app.openshift.io/runtime: openshift
+    app: jenkins-blueocean
+spec:
+  progressDeadlineSeconds: 30
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-blueocean
+  template:
+    metadata:
+      labels:
+        app: jenkins-blueocean
+    spec:
+      automountServiceAccountToken: false
+      #securityContext:
+        #seccompProfile:
+          #type: RuntimeDefault
+          #runAsNonRoot: true
+      containers:
+      - image: docker.io/jenkinsci/blueocean:latest
+        name: jenkins-blueocean
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 50000
+          protocol: TCP
+        resources: {}
+        securityContext:
+          #privileged: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          capabilities:
+            drop: [ "ALL" ]
+            #- CAP_NET_RAW
+            #- CAP_AUDIT_WRITE
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - mountPath: /var/jenkins_home
+          name: jenkins-data-pvc
+        - mountPath: /certs/client
+          name: jenkins-docker-certs-pvc
+          readOnly: true
+      enableServiceLinks: false
+      #hostname: jenkins-blueocean
+      restartPolicy: Always
+      volumes:
+      - name: jenkins-data-pvc
+        persistentVolumeClaim:
+          claimName: jenkins-data
+      - name: jenkins-docker-certs-pvc
+        persistentVolumeClaim:
+          claimName: jenkins-docker-certs
+          readOnly: true

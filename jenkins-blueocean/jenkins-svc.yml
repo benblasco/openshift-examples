@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-blueocean-service
+  labels:
+    app: jenkins-blueocean
+spec:
+  selector:
+    app: jenkins-blueocean
+  ports:
+  - name: jenkins-blueocean-webui
+    port: 8080
+    targetPort: 8080
+  - name: jenkins-blueocean-agent-listener
+    port: 50000
+    targetPort: 50000
+  #sessionAffinity: ClientIP
