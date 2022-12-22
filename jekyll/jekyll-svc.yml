@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jekyll-service
+  labels:
+    app: jekyll
+spec:
+  selector:
+    app: jekyll
+  ports:
+  - name: jekyll-webui
+    port: 4000
+    targetPort: 4000
