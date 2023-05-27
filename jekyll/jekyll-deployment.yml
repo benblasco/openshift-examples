@@ -21,11 +21,15 @@ spec:
         app: jekyll
     spec:
       automountServiceAccountToken: false
+      serviceAccountName: runasanyuid
       containers:
-      - image: docker.io/jekyll/jekyll
-        #command: ['jekyll', 'serve']
-        command: ['/usr/jekyll/bin/jekyll', 'serve']
+      - image: docker.io/jekyll/jekyll:latest
+        command: ['jekyll', 'serve']
+        #command: ['/usr/jekyll/bin/jekyll', 'serve']
         name: jekyll
+        env:
+          - name: JEKYLL_ROOTLESS
+            value: '1'
         ports:
         - containerPort: 4000
           protocol: TCP
@@ -33,7 +37,7 @@ spec:
         securityContext:
           #privileged: true
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
+          #runAsNonRoot: true
           capabilities:
             drop: [ "ALL" ]
             #- CAP_NET_RAW
@@ -41,7 +45,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         volumeMounts:
-        - mountPath: srv/jekyll
+        - mountPath: /srv/jekyll
           name: jekyll-src-pvc
       enableServiceLinks: false
       restartPolicy: Always
@@ -53,13 +57,6 @@ spec:
       initContainers:
       - name: init-jekyll-src
         image: registry.access.redhat.com/ubi9/toolbox:latest
-        #command: ['sh', '-c',  'echo "Hello Ben"'  ]
-        #command: ['sh', '-c', 'git clone https://github.com/RedHatGov/redhatgov.github.io.git /src']
-        #command: ['sh', '-c', 'if [ -d "/src" ]; then cd /src && git pull; else git clone https://github.com/RedHatGov/redhatgov.github.io.git /src; fi']
-        #command: ['sh', '-c', 'if [ ! -d "/src" ]; then git clone https://github.com/RedHatGov/redhatgov.github.io.git /src; else cd /src && git pull; fi']
-        #command: ['sh', '-c',  '{ cd /src; git pull; } || git clone https://github.com/RedHatGov/redhatgov.github.io.git /src' ]
-
-        #command: ['sh', '-c',  'git clone https://github.com/RedHatGov/redhatgov.github.io.git /src || { cd /src; git pull; }'  ]
         command: ['sh', '-c',  'git clone $(GIT_REPO_URL) /src || { cd /src; git pull; }'  ]
         env:
           - name: GIT_REPO_URL
