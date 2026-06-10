@@ -1,5 +1,7 @@
 # Configure local (htpasswd) authentication on Single Node OpenShift
 
+Note: all instructions below were directly copied from the plan executed successfully using Cursor.ai under my instruction
+
 Guide for adding username/password (htpasswd) local users to a fresh Single Node OpenShift (SNO) cluster that only has the bootstrap `kubeadmin` user.
 
 Tested on **OpenShift 4.21.18** at `sno.openshift.blasco.id.au`. Commands run inside a Fedora 44 [Toolbox](https://docs.fedoraproject.org/en-US/atomic-desktops/toolbox/) container named `oc` on the workstation.
@@ -134,29 +136,14 @@ On a fresh cluster, `spec.identityProviders` is typically empty. Verify:
 oc get oauth cluster -o yaml
 ```
 
-Create `oauth-htpasswd.yaml`:
-
-```yaml
-apiVersion: config.openshift.io/v1
-kind: OAuth
-metadata:
-  name: cluster
-spec:
-  identityProviders:
-  - name: htpasswd_users
-    mappingMethod: claim
-    type: HTPasswd
-    htpasswd:
-      fileData:
-        name: htpass-secret
-```
-
-Apply and watch reconciliation:
+Apply the OAuth CR from this repo:
 
 ```bash
-oc apply -f oauth-htpasswd.yaml
+oc apply -f oauth/oauth-htpasswd.yaml
 oc get clusteroperators authentication -w
 ```
+
+See [`oauth/oauth-htpasswd.yaml`](oauth/oauth-htpasswd.yaml).
 
 **Important:** when adding more identity providers later, merge into the existing `identityProviders` list (`oc get oauth cluster -o yaml` first). Re-applying a file with only one provider removes others.
 
@@ -164,14 +151,24 @@ After reconciliation, the console login page shows an **htpasswd_users** option 
 
 ## Step 5: Grant cluster-admin
 
-New htpasswd users can authenticate but have no permissions until roles are granted:
+New htpasswd users can authenticate but have no permissions until roles are granted.
+
+Apply the cluster role bindings from this repo:
+
+```bash
+oc apply -f oauth/cluster-admin-users.yaml
+```
+
+Or use the CLI:
 
 ```bash
 oc adm policy add-cluster-role-to-user cluster-admin admin
 oc adm policy add-cluster-role-to-user cluster-admin bblasco
 ```
 
-`User` objects are created on first login; the "user not found" warning on first binding is expected.
+`User` objects are created on first login; a "user not found" warning on first binding is expected.
+
+See [`oauth/cluster-admin-users.yaml`](oauth/cluster-admin-users.yaml).
 
 ## Step 6: Verify login
 
@@ -241,11 +238,19 @@ oc delete user <user>
 oc delete identity htpasswd_users:<user>
 ```
 
+## Manifests in this repo
+
+| File | Purpose |
+|------|---------|
+| [`oauth/oauth-htpasswd.yaml`](oauth/oauth-htpasswd.yaml) | OAuth CR — htpasswd identity provider |
+| [`oauth/cluster-admin-users.yaml`](oauth/cluster-admin-users.yaml) | ClusterRoleBindings for `admin` and `bblasco` |
+
+The htpasswd secret is not stored in git. Create it from a local `users.htpasswd` file (step 3).
+
 ## Files created on the workstation
 
 | Path | Purpose |
 |------|---------|
 | `~/.kube/sno/api-ca.crt` | TLS CA bundle for `oc login` |
-| `~/.kube/sno/oauth-htpasswd.yaml` | OAuth CR applied to the cluster |
 | `~/.kube/sno/users.htpasswd` | Optional local htpasswd source (delete after secret creation) |
 | `~/.kube/config` | Active `oc` login session |
