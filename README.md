@@ -1,9 +1,9 @@
 # openshift-examples
 My own OpenShift learning
 
+## Local authentication (htpasswd) on Single Node OpenShift
 
-
-
+See [README.oauth.md](README.oauth.md) for configuring username/password local users on a fresh SNO cluster via the CLI (Fedora Toolbox workflow).
 
 ## Persistent storage in OpenShift Local (CodeReady Containers)
 
