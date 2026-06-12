@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: satellite-vms
+  labels:
+    app.kubernetes.io/managed-by: satellite-kubevirt
+    app.kubernetes.io/part-of: satellite-provisioning
